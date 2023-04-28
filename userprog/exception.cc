@@ -635,6 +635,70 @@ ExceptionHandler(ExceptionType which)
                     delete name;
                     break;
                 }
+                case SC_Wait:
+                {
+                    // Đọc địa chỉ “name” từ thanh ghi r4.
+                    int nameAddr = machine->ReadRegister(4);
+                    char *name = User2System(nameAddr, MaxFileLength + 1);
+
+                    // kiểm tra bộ nhớ 
+                    if(name == NULL)
+                    {
+                        DEBUG('a', "\nNot enough memory in System");
+                        printf("\nNot enough memory in System");
+                        machine->WriteRegister(2,-1);
+                        delete []name;
+                        break;
+                    }
+
+                    int check = semTab->Wait(name);
+
+                    // không tìm thấy semaphore "name" trong sTab
+                    if(check == -1)
+                    {
+                        DEBUG('a', "\nThis semaphore is not exist");
+                        printf("\nThis semaphore is not exist");
+                        machine->WriteRegister(2,-1);
+                        delete []name;
+                        break;
+                    }
+
+                    machine->WriteRegister(2,check);
+                    delete []name;
+                    break;           
+                }
+                case SC_Signal:
+                {
+                    // Đọc địa chỉ “name” từ thanh ghi r4.
+                    int nameAddr = machine->ReadRegister(4);
+                    char *name = User2System(nameAddr, MaxFileLength + 1);
+
+                    // kiểm tra bộ nhớ 
+                    if(name == NULL)
+                    {
+                        DEBUG('a', "\nNot enough memory in System");
+                        printf("\nNot enough memory in System");
+                        machine->WriteRegister(2,-1);
+                        delete []name;
+                        break;
+                    }
+
+                    int check = semTab->Signal(name);
+
+                    // không tìm thấy semaphore "name" trong sTab
+                    if(check == -1)
+                    {
+                        DEBUG('a', "\nThis semaphore is not exist");
+                        printf("\nThis semaphore is not exist");
+                        machine->WriteRegister(2,-1);
+                        delete []name;
+                        break;
+                    }
+
+                    machine->WriteRegister(2,check);
+                    delete []name;
+                    break;           
+                }
                 default:
                 {
                     printf("\n Unexpected user mode exception (%d %d)", which, type);
