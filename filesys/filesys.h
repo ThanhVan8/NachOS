@@ -102,7 +102,7 @@ class FileSystem {
 		int fileDescriptor = OpenForReadWrite(name, FALSE);
 
 		if (fileDescriptor == -1) return NULL;
-		//index++;
+		index++;
 		return new OpenFile(fileDescriptor, type);
 	}
 

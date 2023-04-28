@@ -43,7 +43,7 @@ extern BitMap *gPhysPageBitMap;	// quan ly cac frame
 #include "ptable.h"
 extern PTable *pTab;		// quan ly bang tien trinh
 #include "stable.h"
-extern STable *semTab;		//Con tro quan ly cac frame vat ly	// user program memory and registers
+extern STable *semTab;		//Con tro quan ly cac frame vat ly
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB 

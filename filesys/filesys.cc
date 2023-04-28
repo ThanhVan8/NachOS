@@ -220,7 +220,7 @@ OpenFile* FileSystem::Open(char *name, int type)
 	if (sector >= 0)
 		openf[freeSlot] = new OpenFile(sector, type);	// name was found in directory 
 	delete directory;
-	//index++;
+	index++;
 	return openf[freeSlot];				// return NULL if not found
 }
 

@@ -39,8 +39,9 @@
 #define SC_PrintChar    14
 #define SC_ReadString   15
 #define SC_PrintString  16
-#define SC_Seek  17
+#define SC_Seek         17
 //SC cho semaphore
+#define SC_CreateSemaphore  18
 
 #ifndef IN_ASM
 
@@ -154,6 +155,9 @@ void ReadString (char buffer[], int length);
 
 // In chuoi
 void PrintString (char buffer[]);
+
+// Tao semaphore moi
+int CreateSemaphore(char* name, int semval);
 
 
 #endif /* IN_ASM */

@@ -42,11 +42,56 @@ PTable::~PTable()
 
 int PTable::JoinUpdate(int id)
 {
-	
+	// kiểm tra tính hợp lệ của processID id
+    if (id < 0 || id > MAX_PROCESS || !IsExist(id)) {
+        printf("\nInvalid process ID!");
+        DEBUG('a', "\nInvalid process ID!");
+        return -1;
+    }
+    // kiểm tra tiến trình gọi Join có phải là cha 
+	// của tiến trình có processID là id hay không
+    if (currentThread->processID != pcb[id]->parentID) {
+        printf("\nCurrent thread is not the parent of process %d", id);
+        DEBUG('a', "\nCurrent thread is not the parent of process %d", id);
+        return -1;
+    }
+    // Tăng numwait và gọi JoinWait() để chờ tiến trình con thực hiện.
+    pcb[currentThread->processID]->IncNumWait();
+    pcb[id]->JoinWait();
+    // Xử lý exitcode.
+    int exitcode = pcb[id]->GetExitCode();
+    // ExitRelease() để cho phép tiến trình con thoát.
+	pcb[id]->ExitRelease();
+	return exitcode;
 }
+
 int PTable::ExitUpdate(int ec)
 {              
-    
+    // Nếu tiến trình gọi là main process thì gọi Halt().
+	int pid = currentThread->processID;
+	if (pid == 0) {
+		currentThread->FreeSpace();
+		interrupt->Halt();
+		return 0;
+	}
+	// Ngược lại gọi SetExitCode để đặt exitcode cho tiến trình gọi.
+	if (!IsExist(pid)) {
+		printf("\nInvalid process ID!");
+        DEBUG('a', "\nInvalid process ID!");
+        return -1;
+	}
+	pcb[pid]->SetExitCode(ec);
+	// Gọi JoinRelease để giải phóng tiến trình cha đang đợi nó(nếu có) và ExitWait() để xin tiến trình cha 
+	// cho phép thoát.
+	pcb[pcb[pid]->parentID]->DecNumWait();
+	pcb[pid]->JoinRelease();
+	pcb[pid]->ExitWait();
+	this->Remove(pid);
+	
+	// giải phóng tiểu trình hiện tại
+	currentThread->FreeSpace();
+	currentThread->Finish();
+	return ec;
 }
 
 //tìm vị trí trống dùng hàm find của bitmap
@@ -78,8 +123,6 @@ char* PTable::GetFileName(int id)
 //xử lí ExecUpdate cho SC_Exec
 int PTable::ExecUpdate(char* name)
 {
-
-
     //Gọi bmsem->P(); để giúp tránh tình trạng nạp 2 tiến trình cùng 1 lúc.
 	bmsem->P();
 	
@@ -114,9 +157,9 @@ int PTable::ExecUpdate(char* name)
 	pcb[index]->SetFileName(name); // gắn tên tiến trình
 
 	// parrentID là processID của currentThread
-    	pcb[index]->parentID = currentThread->processID;
+    pcb[index]->parentID = currentThread->processID;
 
-	
+
 	// Gọi thực thi phương thức Exec của lớp PCB.
 	int pid = pcb[index]->Exec(name,index);
 

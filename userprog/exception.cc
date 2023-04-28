@@ -49,6 +49,7 @@
 //----------------------------------------------------------------------
 
 #define MaxBuffer 255
+#define MaxFileLength 32
 
 char *User2System(int virtAddr, int limit)
 {
@@ -67,34 +68,6 @@ char *User2System(int virtAddr, int limit)
             break;
     }
     return kernelBuf;
-}
-
-void StartProcess_2(int virtAddr)
-{
-    int temp;
-    char* filename;
-    filename = User2System(virtAddr, MaxFileLength + 1);
-    
-    OpenFile *executable = fileSystem->Open(filename);
-    AddrSpace *space;
-
-    if (executable == NULL) {
-	printf("Unable to open file %s\n", filename);
-	return;
-    }
-
-    space = new AddrSpace(executable);    
-    currentThread->space = space;
-
-    delete executable;			// close file
-
-    space->InitRegisters();		// set the initial register values
-    space->RestoreState();		// load page table register
-
-    machine->Run();			// jump to the user progam
-    ASSERT(FALSE);			// machine->Run never returns;
-					// the address space exits
-					// by doing the syscall "exit"
 }
 
 int System2User(int virtAddr, int len, char *buffer)
@@ -333,7 +306,7 @@ ExceptionHandler(ExceptionType which)
                     {
                         printf("\nFile name is not valid");
                         machine->WriteRegister(2, -1); 
-                        delete[] filename;
+                        delete filename;
                         break;
                     }
 
@@ -341,7 +314,7 @@ ExceptionHandler(ExceptionType which)
                     {
                         printf("\n Not enough memory in system");
                         machine->WriteRegister(2, -1); 
-                        delete[] filename;
+                        delete filename;
                         break;
                     }
 
@@ -349,13 +322,13 @@ ExceptionHandler(ExceptionType which)
                     {
                         printf("\nError create file '%s'", filename);// tao file khong thanh cong
                         machine->WriteRegister(2, -1);
-                        delete[] filename;
+                        delete filename;
                         break;
                     }
 
                     printf("\nCreate file '%s' success", filename);//tao file thanh cong
                     machine->WriteRegister(2, 0);
-                    delete[] filename;
+                    delete filename;
                     break;
                 }
 
@@ -364,7 +337,7 @@ ExceptionHandler(ExceptionType which)
                     int bufAddr = machine->ReadRegister(4); 
                     int type = machine->ReadRegister(5);
                     char *buf;
-
+                    int FreeSlot = fileSystem->FindFreeSlot();
                     // neu da mo 10 files
                     if (fileSystem->index > 10)
                     {
@@ -379,30 +352,30 @@ ExceptionHandler(ExceptionType which)
                     {
                         //printf("Stdin mode\n");
                         machine->WriteRegister(2, 0);
-                        delete[] buf;
+                        delete buf;
                         break;
                     }
                     if (strcmp(buf, "stdout") == 0)
                     {
                         printf("Stdout mode\n");
                         machine->WriteRegister(2, 1);
-                        delete[] buf;
+                        delete buf;
                         break;
                     }
 
                     // Khong mo duoc file
-                    if ((fileSystem->openf[fileSystem->index] = fileSystem->Open(buf, type)) != NULL)
+                    if ((fileSystem->openf[FreeSlot] = fileSystem->Open(buf, type)) != NULL)
                     {
 
                         printf("\nOpen file success '%s'\n", buf);
-                        machine->WriteRegister(2, fileSystem->index - 1);
+                        machine->WriteRegister(2, FreeSlot);
                     }
                     else 
                     {
-                        printf("Can not open file '%s'", buf);
+                        printf("\nCan not open file '%s'", buf);
                         machine->WriteRegister(2, -1);
                     }
-                    delete[] buf;
+                    delete buf;
                     break;
 
                 }
@@ -415,7 +388,7 @@ ExceptionHandler(ExceptionType which)
                     // mo file thu i va muon dong file thu no.[no] (no > i) --> loi
                     if (i < no)
                     {
-                        printf("Close file failed \n");
+                        printf("\nClose file failed \n");
                         machine->WriteRegister(2, -1);
                         break;
                     }
@@ -423,7 +396,7 @@ ExceptionHandler(ExceptionType which)
                     fileSystem->openf[no] == NULL;
                     delete fileSystem->openf[no];
                     machine->WriteRegister(2, 0);
-                    printf("Close file success\n");
+                    printf("\nClose file success\n");
                     break;
                 }
 
@@ -436,7 +409,8 @@ ExceptionHandler(ExceptionType which)
                     
                     if (openf_id > i || openf_id < 0 || openf_id == 1) // Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
                     {						 	// or try to read stdout
-                        printf("Try to open invalib file");
+                        printf("%d", i);
+                        printf("\nTry to open invalid file %d", openf_id);
                         machine->WriteRegister(2, -1);
                         break;
                     }
@@ -455,7 +429,7 @@ ExceptionHandler(ExceptionType which)
                         System2User(virtAddr, sz, buf);
                         machine->WriteRegister(2, sz);
 
-                        delete[] buf;
+                        delete buf;
                         break;
                     }
                     
@@ -469,7 +443,7 @@ ExceptionHandler(ExceptionType which)
                     } else {
                         machine->WriteRegister(2, -1);
                     }
-                    delete[] buf;
+                    delete buf;
                     break;
                 }
 
@@ -515,7 +489,7 @@ ExceptionHandler(ExceptionType which)
                         gSynchConsole->Write(buf + i, 1); // ki tu cuoi
 
                         machine->WriteRegister(2, i - 1);
-                        delete[] buf;
+                        delete buf;
                         break;
                     }
 
@@ -527,7 +501,7 @@ ExceptionHandler(ExceptionType which)
                         int after = fileSystem->openf[openf_id]->GetCurrentPos();
                         System2User(virtAddr, after - before, buf);
                         machine->WriteRegister(2, after - before + 1);
-                        delete[] buf;
+                        delete buf;
                         break;
                     }
                 }
@@ -590,16 +564,15 @@ ExceptionHandler(ExceptionType which)
                         DEBUG('a', "\n Not enough memory in System");
                         printf("\n Not enough memory in System");
                         machine->WriteRegister(2, -1);// tra ve -1
-                        //IncreasePC();
-                        return;
+                        break;
                     }
                     OpenFile *file = fileSystem->Open(name);
                     if (file == NULL)
                     {
                         printf("\nExec:: Can't open this file.");
                         machine->WriteRegister(2, -1); // tra ve -1
-                        //IncreasePC();
-                        return;
+                        delete name;
+                        break;
                     }
 
                     delete file;
@@ -608,12 +581,60 @@ ExceptionHandler(ExceptionType which)
                     int pid = pTab->ExecUpdate(name);
                     machine->WriteRegister(2, pid);
 
-                    delete[] name;
-                    //IncreasePC();
-                    return;
+                    delete name;
+                    break;
                 }
-
-
+                case SC_Join:
+                {
+                    int id = machine->ReadRegister(4); // Đọc id của tiến trình cần Join từ thanh ghi r4
+                    int ec = pTab->JoinUpdate(id);
+                    machine->WriteRegister(2, ec);
+                    break;
+                }
+                case SC_Exit:
+                {
+                    int exitStatus = machine->ReadRegister(4); // Đọc exitStatus từ thanh ghi r4
+                    int ec = pTab->ExitUpdate(exitStatus);
+                    machine->WriteRegister(2, ec);
+                    break;
+                }
+                case SC_CreateSemaphore:
+                {
+                    // Đọc địa chỉ “name” từ thanh ghi r4.
+                    int nameAddr = machine->ReadRegister(4);
+                    // Đọc giá trị “semval” từ thanh ghi r5.
+                    int semval = machine->ReadRegister(5);
+                    // Tên địa chỉ “name” lúc này đang ở trong user space. Gọi hàm User2System đã được khai báo trong 
+                    // lớp machine để chuyển vùng nhớ user space tới vùng nhớ system space.
+                    char *name = User2System(nameAddr, MaxFileLength + 1);
+                    if (strlen(name) == 0)
+                    {
+                        printf("\nFile name is not valid");
+                        machine->WriteRegister(2, -1); 
+                        delete name;
+                        break;
+                    }
+                    if (name == NULL)  //khong doc duoc file
+                    {
+                        printf("\nNot enough memory in system");
+                        machine->WriteRegister(2, -1); 
+                        delete name;
+                        break;
+                    }
+                    // Gọi thực hiện hàm semTab->Create(name,semval) để tạo Semaphore, nếu có lỗi thì báo lỗi.
+                    int create = semTab->Create(name, semval);
+                    if (create == -1) {
+                        DEBUG('a', "\nCannot create semaphore %s!", name);
+                        printf("\nCannot create semaphore %s!", name);
+                        machine->WriteRegister(2, -1); 
+                        delete name;
+                        break;
+                    }
+                    // Lưu kết quả thực hiện vào thanh ghi r2.
+                    machine->WriteRegister(2, 0); 
+                    delete name;
+                    break;
+                }
                 default:
                 {
                     printf("\n Unexpected user mode exception (%d %d)", which, type);

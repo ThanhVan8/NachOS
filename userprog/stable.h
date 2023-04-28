@@ -1,13 +1,11 @@
 #ifndef STABLE_H
 #define STABLE_H
+
 #include "thread.h"
 #include "synch.h"
 #include "sem.h"
 #include "bitmap.h"
 #define MAX_SEMAPHORE 10
-
-
-
 class STable
 {
 private:
@@ -30,8 +28,6 @@ public:
 	
 	// Tìm slot trống.
 	int FindFreeSlot();
-
-	
 };
 
 #endif

@@ -33,7 +33,6 @@ STable::~STable()
 //Kiểm tra và tạo semaphore
 int STable::Create(char *name, int init)
 {
-
 	// kiểm tra có tồn tại semaphore hay chưa
 	for(int i=0; i<MAX_SEMAPHORE; i++)
 	{
