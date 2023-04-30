@@ -76,7 +76,7 @@ int STable::Wait(char *name)
 			}
 		}
 	}
-	printf("Khong ton tai semaphore"); //không tồn tại
+	printf("\nKhong ton tai semaphore"); //không tồn tại
 	return -1;
 }
 
@@ -97,7 +97,7 @@ int STable::Signal(char *name)
 			}
 		}
 	}
-	printf("Khong ton tai semaphore");//không tồn tại
+	printf("\nKhong ton tai semaphore");//không tồn tại
 	return -1;
 }
 

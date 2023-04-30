@@ -42,6 +42,9 @@
 #define SC_Seek         17
 //SC cho semaphore
 #define SC_CreateSemaphore  18
+#define SC_Wait             19
+#define SC_Signal           20
+
 
 #ifndef IN_ASM
 
@@ -158,6 +161,11 @@ void PrintString (char buffer[]);
 
 // Tao semaphore moi
 int CreateSemaphore(char* name, int semval);
+
+//
+int Wait(char* name); 
+//
+int Signal(char* name); 
 
 
 #endif /* IN_ASM */
