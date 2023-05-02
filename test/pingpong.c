@@ -9,7 +9,4 @@ void main()
 	pongPID = Exec("./test/pong");
 	Join(pingPID);
 	Join(pongPID);
-	
-
-
 }

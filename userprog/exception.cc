@@ -647,7 +647,7 @@ ExceptionHandler(ExceptionType which)
                         DEBUG('a', "\nNot enough memory in System");
                         printf("\nNot enough memory in System");
                         machine->WriteRegister(2,-1);
-                        delete []name;
+                        delete name;
                         break;
                     }
 
@@ -659,12 +659,12 @@ ExceptionHandler(ExceptionType which)
                         DEBUG('a', "\nThis semaphore is not exist");
                         printf("\nThis semaphore is not exist");
                         machine->WriteRegister(2,-1);
-                        delete []name;
+                        delete name;
                         break;
                     }
 
                     machine->WriteRegister(2,check);
-                    delete []name;
+                    delete name;
                     break;           
                 }
                 case SC_Signal:
@@ -679,7 +679,7 @@ ExceptionHandler(ExceptionType which)
                         DEBUG('a', "\nNot enough memory in System");
                         printf("\nNot enough memory in System");
                         machine->WriteRegister(2,-1);
-                        delete []name;
+                        delete name;
                         break;
                     }
 
@@ -691,12 +691,12 @@ ExceptionHandler(ExceptionType which)
                         DEBUG('a', "\nThis semaphore is not exist");
                         printf("\nThis semaphore is not exist");
                         machine->WriteRegister(2,-1);
-                        delete []name;
+                        delete name;
                         break;
                     }
 
                     machine->WriteRegister(2,check);
-                    delete []name;
+                    delete name;
                     break;           
                 }
                 default:

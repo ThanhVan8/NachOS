@@ -22,24 +22,45 @@
 
 void StartProcess_2(int id)
 {
-    char* fileName = pTab->GetFileName(id);
+    // char* fileName = pTab->GetFileName(id);
 
+    // AddrSpace *space;
+    // space = new AddrSpace(fileName);
+
+	// if(space == NULL)
+	// {
+	// 	printf("\nPCB::Exec : Can't create AddSpace.");
+	// 	return;
+	// }
+
+    // currentThread->space = space;
+
+    // space->InitRegisters();
+    // space->RestoreState();		
+
+    // machine->Run();		
+    // ASSERT(FALSE);
+
+    char* filename = pTab->GetFileName(id);
+    //OpenFile *executable = fileSystem->Open(fileName);
     AddrSpace *space;
-    space = new AddrSpace(fileName);
 
-	if(space == NULL)
-	{
-		printf("\nPCB::Exec : Can't create AddSpace.");
-		return;
-	}
-
+    // if (executable == NULL) {
+	// printf("Unable to open file %s\n", fileName);
+	// return;
+    // }
+    space = new AddrSpace(filename);   
     currentThread->space = space;
 
-    space->InitRegisters();
-    space->RestoreState();		
+    //delete filename;			// close file
 
-    machine->Run();		
-    ASSERT(FALSE);
+    space->InitRegisters();		// set the initial register values
+    space->RestoreState();		// load page table register
+
+    machine->Run();			// jump to the user progam
+    ASSERT(FALSE);			// machine->Run never returns;
+					// the address space exits
+					// by doing the syscall "exit"
 }
 
 void
