@@ -162,9 +162,10 @@ void PrintString (char buffer[]);
 // Tao semaphore moi
 int CreateSemaphore(char* name, int semval);
 
-//
+// Dua tien trinh vao trang thai cho
 int Wait(char* name); 
-//
+
+// Goi tien trinh thuc thi
 int Signal(char* name); 
 
 

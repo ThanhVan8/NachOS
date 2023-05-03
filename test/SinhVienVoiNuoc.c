@@ -109,12 +109,12 @@ int main()
 				// Doc toi cuoi file
 				break;
 			}
-			if(c != '\n') 			// kiem soat ki tu xuong dong de thoat vong lap
+			if(c != '\n') 						// kiem soat ki tu xuong dong de thoat vong lap
 			{
 				Write(&c, 1, si_fSinhVien);		// ghi vao file sinhvien.txt			
 			}
 			else
-				break;				// khi doc het 1 doc
+				break;							// khi doc het 1 doc
 						
 		}
 
@@ -128,7 +128,7 @@ int main()
 		Wait("main");	
 		
 		// Thuc hien doc file tu result va ghi ket qua vao file output.txt
-		// file result.txt de ghi thu tu voi nuoc tuong ung voi sinh vien den rot nuoc
+		// file result.txt de ghi thu tu voi nuoc tuong ung voi sinh vien den rot nuoc - duoc tao trong sinhvien.c
 		si_fResult = Open("result.txt", 1);		
 		if(si_fResult == -1)		// mo file that bai
 		{
