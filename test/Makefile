@@ -35,7 +35,7 @@ CPP = gcc -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt shell matmult sort testchar testint ascii sort2 help teststring createfile ping pong pingpong
+all: halt shell matmult sort testchar testint ascii sort2 help teststring createfile ping pong pingpong pre
 	
 
 start.o: start.s ../userprog/syscall.h
@@ -126,3 +126,9 @@ pingpong.o: pingpong.c
 pingpong: pingpong.o start.o
 	$(LD) $(LDFLAGS) start.o pingpong.o -o pingpong.coff
 	../bin/coff2noff pingpong.coff pingpong
+
+pre.o: pre.c
+	$(CC) $(CFLAGS) -c pre.c
+pre: pre.o start.o
+	$(LD) $(LDFLAGS) start.o pre.o -o pre.coff
+	../bin/coff2noff pre.coff pre
