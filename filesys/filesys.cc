@@ -95,17 +95,29 @@ FileSystem::FileSystem(bool format)
         directoryFile = new OpenFile(DirectorySector);
     }
     
-    //Cai dat 
-    openf = new OpenFile*[10];
+    //fTab = new OpenFile*[10];
 	index = 0;
-	for (int i = 0; i < 10; ++i)
-	{
-		openf[i] = NULL;
-	}
-	openf[index++] = this->Open("stdin", 2);
-	openf[index++] = this->Open("stdout", 3);
-	this->Create("stdin", 0);
+    this->Create("stdin", 0);
 	this->Create("stdout", 0);
+	for (int i = 0; i < MAX_FILE; ++i)
+	{
+		fTab[i] = NULL;
+	}
+	fTab[index++] = this->Open("stdin", 2);
+	fTab[index++] = this->Open("stdout", 3);
+}
+
+FileSystem::~FileSystem()
+{
+        if(freeMapFile)
+            delete freeMapFile;
+        if(directoryFile)
+            delete directoryFile;
+		for (int i = 0; i < MAX_FILE; ++i)
+		{
+			if (fTab[i])
+				delete fTab[i];
+		}
 }
 
 //----------------------------------------------------------------------
@@ -204,7 +216,7 @@ OpenFile* FileSystem::Open(char *name)
     delete directory;
     //return openFile;				// return NULL if not found
 	index++;
-	return openf[index - 1];				// return NULL if not found
+	return fTab[index - 1];				// return NULL if not found
 }
 
 OpenFile* FileSystem::Open(char *name, int type)
@@ -218,20 +230,10 @@ OpenFile* FileSystem::Open(char *name, int type)
 	directory->FetchFrom(directoryFile);
 	sector = directory->Find(name);
 	if (sector >= 0)
-		openf[freeSlot] = new OpenFile(sector, type);	// name was found in directory 
+		fTab[freeSlot] = new OpenFile(sector, type);	// name was found in directory 
 	delete directory;
 	index++;
-	return openf[freeSlot];				// return NULL if not found
-}
-
-//Ham tim slot trong
-int FileSystem::FindFreeSlot()
-{
-	for(int i = 2; i < 10; i++)
-	{
-		if(openf[i] == NULL) return i;		
-	}
-	return -1;
+	return fTab[freeSlot];				// return NULL if not found
 }
 
 //----------------------------------------------------------------------
@@ -333,3 +335,14 @@ FileSystem::Print()
     delete freeMap;
     delete directory;
 } 
+
+// Tìm slot trống trong bảng fTab
+int FileSystem::FindFreeSlot()
+{
+	for(int i = 2; i < MAX_FILE; i++)
+	{
+		if(fTab[i] == NULL)
+            return i;
+	}
+	return -1;
+}

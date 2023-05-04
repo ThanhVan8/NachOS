@@ -38,98 +38,92 @@
 #include "copyright.h"
 #include "openfile.h"
 
+#define MAX_FILE 10
 
-//OpenFile duy nhat ...
 typedef int OpenFileID;
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
 				// calls to UNIX, until the real file system
 				// implementation is available
 
-
-
-class FileSystem {
-  public:
-  	
-  	//Khai bao 2 bien 
-  	OpenFile** openf; //De kiem tra xem file co dang mo khong
+class FileSystem
+{
+public:
+	OpenFile *fTab[MAX_FILE]; // file table
 	int index;
-	
-	//Dinh nghia lai ham khoi tao cua FileSystem
-    	FileSystem(bool format) {
-		openf = new OpenFile*[10];
+
+	FileSystem(bool format)
+	{
 		index = 0;
-		for (int i = 0; i < 10; ++i)
-		{
-			openf[i] = NULL;
-		}
 		this->Create("stdin", 0);
 		this->Create("stdout", 0);
-		openf[index++] = this->Open("stdin", 2);
-		openf[index++] = this->Open("stdout", 3);    
+		for (int i = 0; i < MAX_FILE; ++i)
+		{
+			fTab[i] = NULL;
+		}
+		fTab[index++] = this->Open("stdin", 2);
+		fTab[index++] = this->Open("stdout", 3);
 	}
-	
-	//Ham huy doi tuong FileSystem
+
 	~FileSystem()
 	{
-		for (int i = 0; i < 10; ++i)
+		for (int i = 0; i < MAX_FILE; ++i)
 		{
-			if (openf[i] != NULL) delete openf[i];
+			if (fTab[i])
+				delete fTab[i];
 		}
-		delete[] openf;
 	}
 
-
-
-
-	//Default method
-    	bool Create(char *name, int initialSize) { 
+	bool Create(char *name, int initialSize)
+	{
 		int fileDescriptor = OpenForWrite(name);
-		if (fileDescriptor == -1) return FALSE;
-		Close(fileDescriptor); 
-		return TRUE; 
+
+		if (fileDescriptor == -1)
+			return FALSE;
+		Close(fileDescriptor);
+		return TRUE;
 	}
-	
-	//Default method
-    	OpenFile* Open(char *name) {
-	  	int fileDescriptor = OpenForReadWrite(name, FALSE);
 
-	  	if (fileDescriptor == -1) return NULL;
-	  	return new OpenFile(fileDescriptor);
-   	}
-
-	//Overload lai ham Open de mo file voi 2 type khac nhau 
-	OpenFile* Open(char *name, int type) {
+	OpenFile *Open(char *name)
+	{
 		int fileDescriptor = OpenForReadWrite(name, FALSE);
 
-		if (fileDescriptor == -1) return NULL;
+		if (fileDescriptor == -1)
+			return NULL;
+		// index++;
+		return new OpenFile(fileDescriptor);
+	}
+
+	OpenFile *Open(char *name, int type)
+	{
+		int fileDescriptor = OpenForReadWrite(name, FALSE);
+
+		if (fileDescriptor == -1)
+			return NULL;
 		index++;
 		return new OpenFile(fileDescriptor, type);
 	}
 
-	
-	//Ham tim slot trong
+	bool Remove(char *name)
+	{
+		return Unlink(name) == 0;
+	}
+
+	// Tìm slot trống trong bảng fTab
 	int FindFreeSlot()
 	{
-		for(int i = 2; i < 10; i++)
+		for (int i = 2; i < MAX_FILE; i++)
 		{
-			if(openf[i] == NULL) return i;		
+			if (fTab[i] == NULL)
+				return i;
 		}
 		return -1;
 	}
-	
-
-    bool Remove(char *name) {
-		return Unlink(name) == 0; 
-    }
-
 };
 
 #else // FILESYS
 class FileSystem {
   public:
-  	
-  	//Khai bao
-  	OpenFile** openf;
+  	OpenFile *fTab[MAX_FILE]; // file table
 	int index;
 	
     FileSystem(bool format);		// Initialize the file system.
@@ -139,19 +133,23 @@ class FileSystem {
 					// the disk, so initialize the directory
     					// and the bitmap of free blocks.
 
+	~FileSystem();
+
     bool Create(char *name, int initialSize);  	
 					// Create a file (UNIX creat)
 
 	
     OpenFile* Open(char *name); 	// Open a file (UNIX open)
-    OpenFile* Open(char *name, int type); //Mo file voi tham so type
-    int FindFreeSlot();
+
+    OpenFile* Open(char *name, int type); // Open a file with type
 
     bool Remove(char *name);  		// Delete a file (UNIX unlink)
 
     void List();			// List all the files in the file system
 
     void Print();			// List all the files and their contents
+
+	int FindFreeSlot();	// Find free slot in file table
 
   private:
    OpenFile* freeMapFile;		// Bit map of free disk blocks,

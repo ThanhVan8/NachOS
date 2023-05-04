@@ -6,5 +6,6 @@ int main()
 	for(i = 0; i < 1000; i++)
 	{
 		PrintChar('B');
+		Signal("ping");
 	}
 }

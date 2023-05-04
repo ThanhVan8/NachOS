@@ -336,39 +336,36 @@ ExceptionHandler(ExceptionType which)
                 {
                     int bufAddr = machine->ReadRegister(4); 
                     int type = machine->ReadRegister(5);
-                    char *buf;
                     int FreeSlot = fileSystem->FindFreeSlot();
                     // neu da mo 10 files
                     if (fileSystem->index > 10)
                     {
                         machine->WriteRegister(2, -1);
-                        delete[] buf;
                         break;
                     }
                         
                     // Khi mo stdin hay stdout, khong tang slg files
-                    buf = User2System(bufAddr, MaxFileLength + 1);
+                    char *buf = User2System(bufAddr, MaxFileLength + 1);
                     if (strcmp(buf, "stdin") == 0)
                     {
                         //printf("Stdin mode\n");
-                        machine->WriteRegister(2, 0);
+                        machine->WriteRegister(2, 0); // trả về id file là 0
                         delete buf;
                         break;
                     }
                     if (strcmp(buf, "stdout") == 0)
                     {
                         printf("Stdout mode\n");
-                        machine->WriteRegister(2, 1);
+                        machine->WriteRegister(2, 1); // trả về id file là 1
                         delete buf;
                         break;
                     }
 
                     // Khong mo duoc file
-                    if ((fileSystem->openf[FreeSlot] = fileSystem->Open(buf, type)) != NULL)
+                    if ((fileSystem->fTab[FreeSlot] = fileSystem->Open(buf, type)) != NULL)
                     {
-
-                        printf("\nOpen file success '%s'\n", buf);
-                        machine->WriteRegister(2, FreeSlot);
+                        printf("\nOpen file '%s' success\n", buf);
+                        machine->WriteRegister(2, FreeSlot); // trả về id file
                     }
                     else 
                     {
@@ -377,7 +374,6 @@ ExceptionHandler(ExceptionType which)
                     }
                     delete buf;
                     break;
-
                 }
 
                 case SC_Close:
@@ -392,12 +388,20 @@ ExceptionHandler(ExceptionType which)
                         machine->WriteRegister(2, -1);
                         break;
                     }
-
-                    fileSystem->openf[no] == NULL;
-                    delete fileSystem->openf[no];
-                    machine->WriteRegister(2, 0);
-                    printf("\nClose file success\n");
-                    break;
+                    if (fileSystem->fTab[no])
+                    {
+                        delete fileSystem->fTab[no];
+                        fileSystem->fTab[no] = NULL;
+                        machine->WriteRegister(2, 0);
+                        printf("\nClose file success\n");
+                        break;
+                    }
+                    else
+                    {
+                        machine->WriteRegister(2, -1);
+                        printf("\nClose file failed\n");
+                        break;
+                    }
                 }
 
                 case SC_Read:
@@ -409,13 +413,12 @@ ExceptionHandler(ExceptionType which)
                     
                     if (openf_id > i || openf_id < 0 || openf_id == 1) // Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
                     {						 	// or try to read stdout
-                        printf("%d", i);
                         printf("\nTry to open invalid file %d", openf_id);
                         machine->WriteRegister(2, -1);
                         break;
                     }
 
-                    if (fileSystem->openf[openf_id] == NULL)
+                    if (fileSystem->fTab[openf_id] == NULL)
                     {
                         machine->WriteRegister(2, -1);
                         break;
@@ -433,15 +436,15 @@ ExceptionHandler(ExceptionType which)
                         break;
                     }
                     
-                    int before = fileSystem->openf[openf_id]->GetCurrentPos();
-                    if ((fileSystem->openf[openf_id]->Read(buf, charcount)) > 0)
+                    int before = fileSystem->fTab[openf_id]->GetCurrentPos();
+                    if ((fileSystem->fTab[openf_id]->Read(buf, charcount)) > 0)
                     {
                         // chuyen du lieu tu kernel sang user
-                        int after = fileSystem->openf[openf_id]->GetCurrentPos();
+                        int after = fileSystem->fTab[openf_id]->GetCurrentPos();
                         System2User(virtAddr, charcount, buf);
                         machine->WriteRegister(2, after - before + 1);	// after & before just used for returning
                     } else {
-                        machine->WriteRegister(2, -1);
+                        machine->WriteRegister(2, -2); // cham toi cuoi file
                     }
                     delete buf;
                     break;
@@ -461,14 +464,14 @@ ExceptionHandler(ExceptionType which)
                         break;
                     }
                     
-                    if (fileSystem->openf[openf_id] == NULL)
+                    if (fileSystem->fTab[openf_id] == NULL)
                     {
                         machine->WriteRegister(2, -1);
                         break;
                     }
 
                     // file chi doc	
-                    if (fileSystem->openf[openf_id]->type == 1)
+                    if (fileSystem->fTab[openf_id]->type == 1)
                     {
                         printf("Try to modify read-only file");
                         machine->WriteRegister(2, -1);
@@ -495,10 +498,10 @@ ExceptionHandler(ExceptionType which)
 
 
                     // ghi vao file
-                    int before = fileSystem->openf[openf_id]->GetCurrentPos();
-                    if ((fileSystem->openf[openf_id]->Write(buf, charcount)) != 0)
+                    int before = fileSystem->fTab[openf_id]->GetCurrentPos();
+                    if ((fileSystem->fTab[openf_id]->Write(buf, charcount)) != 0)
                     {
-                        int after = fileSystem->openf[openf_id]->GetCurrentPos();
+                        int after = fileSystem->fTab[openf_id]->GetCurrentPos();
                         System2User(virtAddr, after - before, buf);
                         machine->WriteRegister(2, after - before + 1);
                         delete buf;
@@ -520,7 +523,7 @@ ExceptionHandler(ExceptionType which)
                         return;
                     }
                     // Kiem tra file co ton tai khong
-                    if (fileSystem->openf[id] == NULL)
+                    if (fileSystem->fTab[id] == NULL)
                     {
                         printf("\nKhong the seek vi file nay khong ton tai.");
                         machine->WriteRegister(2, -1);
@@ -536,8 +539,8 @@ ExceptionHandler(ExceptionType which)
                         return;
                     }
                     // Neu pos = -1 thi gan pos = Length nguoc lai thi giu nguyen pos
-                    pos = (pos == -1) ? fileSystem->openf[id]->Length() : pos;
-                    if (pos > fileSystem->openf[id]->Length() || pos < 0) // Kiem tra lai vi tri pos co hop le khong
+                    pos = (pos == -1) ? fileSystem->fTab[id]->Length() : pos;
+                    if (pos > fileSystem->fTab[id]->Length() || pos < 0) // Kiem tra lai vi tri pos co hop le khong
                     {
                         printf("\nKhong the seek file den vi tri nay.");
                         machine->WriteRegister(2, -1);
@@ -545,7 +548,7 @@ ExceptionHandler(ExceptionType which)
                     else
                     {
                         // Neu hop le thi tra ve vi tri di chuyen thuc su trong file
-                        fileSystem->openf[id]->Seek(pos);
+                        fileSystem->fTab[id]->Seek(pos);
                         machine->WriteRegister(2, pos);
                     }
                     //IncreasePC();

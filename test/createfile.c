@@ -31,8 +31,8 @@ int main()
 	char buff[256];
 	int id;
 	int len;
-	//CreateFile("Van_out.txt");
-	//CreateFile("Van.txt");
+	// CreateFile("Van_out.txt");
+	// CreateFile("Van.txt");
 
 	idOut = Open("Van_out.txt", 0);
 	PrintString("file Van_out.txt: ");
@@ -48,11 +48,23 @@ int main()
 		// PrintString(buff);
 		// PrintString("\nLen: ");
 		// PrintInt(len);
-		Write(buff, len, idOut);
+		Write("hellohello", len, idOut);
 		Close(id);
 		Close(idOut);
 		// Write("abcd djs", 256, id);
 		// Close(id);
 	}
+
+	// CreateFile("file1.txt");
+	// CreateFile("file1.txt");
+
+	// idOut = Open("file1.txt", 0);
+	// PrintString("file file1.txt: ");
+	// PrintInt(idOut);
+
+	// id = Open("file1.txt", 1);
+	// PrintString("file file1.txt: ");
+	// PrintInt(id);
+	// PrintString("\n");
 	Halt();
 }
