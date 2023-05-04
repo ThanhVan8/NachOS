@@ -12,18 +12,18 @@ int main()
 	int fileLength;		                    // bien luu do dai file
 	int pFile;		                        // bien luu con tro trong file
 
-    Signal("pre");	        // chay tien trinh "pre"
+    Signal("sv_vn");	        // chay tien trinh "sv_vn"
     while(1)
     {
         fileLength = 0;
         Wait("sinhvien");
 
         // tao file result.txt de ghi ket qua phan chia voi nuoc
-        is_Success = Create("result.txt");
+        is_Success = CreateFile("result.txt");
         if(is_Success == -1)        // tao file that bai
         {
             Signal("main");         // tro ve tien trinh "main"
-            return -1;
+            return;
         }
 
         // mo file "sinhvien.txt" de doc du lieu
@@ -31,7 +31,7 @@ int main()
         if(si_fSinhVien == -1)          // doc file that bai
         {
             Signal("main");         // tro ve tien trinh "main"
-            return -1;
+            return;
         }
 
         fileLength = Seek(-1, si_fSinhVien);        // lay do dai file sinhvien.txt
@@ -40,21 +40,21 @@ int main()
 
         // file voinuoc.txt de ghi tung dung tich binh nuoc cua sinh vien
         // tao file voinuoc.txt 
-        is_Success = Create("voinuoc.txt");
+        is_Success = CreateFile("voinuoc.txt");
         if(is_Success == -1)        // tao file that bai
         {
             Close(si_fSinhVien);    // dong file sinhvien.txt
             Signal("main");         // tro ve tien trinh "main"
-            return -1;
+            return ;
         }
 
         // mo file voinuoc.txt
         si_fVoiNuoc = Open("voinuoc.txt",0);
-        if(si_fVoiNuoc == -1)        // tao file that bai
+        if(si_fVoiNuoc == -1)        // mo file that bai
         {
             Close(si_fSinhVien);    // dong file sinhvien.txt
             Signal("main");         // tro ve tien trinh "main"
-            return -1;
+            return;
         }
 
         // ghi dung tich vao voinuoc.txt tu sinhvien.txt
@@ -67,9 +67,10 @@ int main()
             if(c != ' ')                    
             {
                 Write(&c,1, si_fVoiNuoc);       // ghi vao file voinuoc.txt dung tich binh nuoc
-            } else flagVoiNuoc = 1;
+            } else 
+                flagVoiNuoc = 1;
 
-            if(pFile = fileLength -1)
+            if(pFile == fileLength -1)
             {
                 Write('*',1,si_fVoiNuoc);
                 flagVoiNuoc = 1;
@@ -104,7 +105,7 @@ int main()
             pFile++;    // dua con tro den vi tri tiep theo
 
         }
-
+        Signal("main");
     }
 
 }
