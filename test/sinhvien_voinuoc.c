@@ -2,65 +2,88 @@
 int main()
 {
     // -------Khai báo-------
-    int inputID; // id file input
+    int f_input; // id file input
     char c;      // kí tự đọc được
     int n;       // số thời điểm được xét
 
-    int outputID;
+    int f_output;
 
-    int svID, vnID;
+    int t_sv, t_vn;
 
     int f_sv, f_vn; // file sinhvien, voinuoc
 
-    int 
+    int luongNuoc, lenRead;
+
+    int isSuccess;
 
     // ----------------------
 
     // Đọc số thời điểm được xét
-    inputID = Open("input.txt", 1);
-    if (inputID == -1)
+    f_input = Open("input.txt", 1);
+    if (f_input == -1)
         return 0;
     n = 0;
     while (c != '\n')
     {
-        Read(&c, 1, inputID);
+        Read(&c, 1, f_input);
         if (c >= '0' && c <= '9')
             n = n * 10 + ((int)c - '0');
     }
-    PrintInt(n);
 
     // Dùng file output.txt để ghi kết quả
     CreateFile("output.txt");
-    outputID = Open("output.txt", 0);
-    if (outputID == -1)
+    f_output = Open("output.txt", 0);
+    if (f_output == -1)
         return 0;
-    
-    // Thực thi chương trình
-    svID = Exec("./test/sinhvien");
-    if(svID == -1) {
-        Close(inputID);
-        Close(outputID);
-        return 0;
-    }
-    vnID = Exec("./test/voinuoc");
-    if(vnID == -1) {
-        Close(inputID);
-        Close(outputID);
-        return 0;
-    }
 
     // Tạo semaphore
+    isSuccess = CreateSemaphore("sinhvien", 0);
+    if(isSuccess == -1)
+		return 0;
+    isSuccess = CreateSemaphore("voinuoc", 0);
+    if(isSuccess == -1)
+		return 0;
+    isSuccess = CreateSemaphore("main", 0);
+    if(isSuccess == -1)
+		return 0;
+
+    // Thực thi chương trình
+    t_sv = Exec("./test/sinhvien");
+    if(t_sv == -1) {
+        Close(f_input);
+        Close(f_output);
+        return 0;
+    }
+    t_vn = Exec("./test/voinuoc");
+    if(t_vn == -1) {
+        Close(f_input);
+        Close(f_output);
+        return 0;
+    }
+    // Join(t_sv);
+    // Join(t_vn);
 
     // Tạo file sinhvien, voinuoc
-    f_sv = CreateFile("sinhvien.txt");
-    f_vn = CreateFile("voinuoc.txt");
+    CreateFile("sinhvien.txt");
+    CreateFile("voinuoc.txt");
 
-    while(1) {
-        while (c != ' ')
+    f_sv = Open("sinhvien.txt", 0);
+    if (f_sv == -1)
+        return 0;
+    f_vn = Open("voinuoc.txt", 0);
+    if (f_vn == -1)
+        return 0;
+
+    while (n > 0) { // xử lý từng thời điểm
+        while (1) // lấy từng dòng dữ liệu input ghi vào sinhvien
         {
-            Read(&c, 1, inputID);
-            if (c >= '0' && c <= '9')
-                n = n * 10 + ((int)c - '0');
+            lenRead = Read(&c, 1, f_input);
+            if (lenRead < 1 || c == '\n')
+                break;
+            Write(&c, 1, f_sv);
         }
+        Signal("sinhvien"); //1
+        Wait("main"); //-1
+        n--;
     }
 }

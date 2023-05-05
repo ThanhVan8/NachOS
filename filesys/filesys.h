@@ -38,7 +38,7 @@
 #include "copyright.h"
 #include "openfile.h"
 
-#define MAX_FILE 10
+#define MAX_FILE 15
 
 typedef int OpenFileID;
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
@@ -99,7 +99,7 @@ public:
 
 		if (fileDescriptor == -1)
 			return NULL;
-		index++;
+		// index++;
 		return new OpenFile(fileDescriptor, type);
 	}
 

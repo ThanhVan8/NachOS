@@ -34,37 +34,31 @@ int main()
 	// CreateFile("Van_out.txt");
 	// CreateFile("Van.txt");
 
-	idOut = Open("Van_out.txt", 0);
-	PrintString("file Van_out.txt: ");
-	PrintInt(idOut);
+	// idOut = Open("Van_out.txt", 0);
+	// PrintString("file Van_out.txt: ");
+	// PrintInt(idOut);
 
-	id = Open("Van.txt", 1);
+	id = Open("Van.txt", 0);
 	PrintString("file Van.txt: ");
 	PrintInt(id);
 	PrintString("\n");
 
-	if(id != -1 && idOut != -1) {
-		len = Read(buff, 256, id);
-		// PrintString(buff);
-		// PrintString("\nLen: ");
-		// PrintInt(len);
-		Write("hellohello", len, idOut);
-		Close(id);
-		Close(idOut);
-		// Write("abcd djs", 256, id);
-		// Close(id);
-	}
+	// if(id != -1 && idOut != -1) {
+	// 	len = Read(buff, 256, id);
+	// 	// PrintString(buff);
+	// 	// PrintString("\nLen: ");
+	// 	// PrintInt(len);
+	// 	Write("hellohello", len, idOut);
+	// 	Close(id);
+	// 	Close(idOut);
+	// 	// Write("abcd djs", 256, id);
+	// 	// Close(id);
+	// }
 
-	// CreateFile("file1.txt");
-	// CreateFile("file1.txt");
-
-	// idOut = Open("file1.txt", 0);
-	// PrintString("file file1.txt: ");
-	// PrintInt(idOut);
-
-	// id = Open("file1.txt", 1);
-	// PrintString("file file1.txt: ");
-	// PrintInt(id);
-	// PrintString("\n");
+	Seek(-1,id);
+	Write("he", 3, id);
+	id = Open("Van.txt", 0);
+	Seek(-1,id);
+	Write("he", 3, id);
 	Halt();
 }

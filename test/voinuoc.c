@@ -15,7 +15,7 @@ int main()
     // Xu ly voi nuoc
     while(1)
     {
-        Wait("sv_vn");                    // cho tien trinh "sv_vn" vao trang thai cho
+        Wait("sv_vn");  //0                  // cho tien trinh "sv_vn" vao trang thai cho
         // mo file result.txt de ghi voi nuoc nao dang su dung
         si_fResult = Open("result.txt",0); 
         if(si_fResult == -1)            // mo file that bai
@@ -23,10 +23,10 @@ int main()
             Signal("sinhvien");         // goi tien trinh "sinhvien" hoat dong
             return;
         }
-
+        
         while(1)
         {
-            Wait("voinuoc");            // cho tien trinh "voinuoc" vao trang thai cho
+            Wait("voinuoc"); //0           // cho tien trinh "voinuoc" vao trang thai cho
             c = 0;
             // mo file voinuoc.txt de doc dung tich 
             si_fVoiNuoc = Open("voinuoc.txt",1);
@@ -48,7 +48,10 @@ int main()
                 }
                 if(c != '*')                            // 
                 {
-                    dungtichSV = dungtichSV * 10 + (dungtichSV - 48);
+                    if(c >= '0' && c <= '9') {
+                        Write(&c, 1, si_fResult);
+                        dungtichSV = dungtichSV * 10 + (c - 48);
+                    }
                 } 
                 else
                 {
@@ -63,23 +66,23 @@ int main()
                 if(voi1 <= voi2)        // truong hop thoi gian cua voi 1 it hon (bang) voi 2
                 {
                     voi1 = voi1 + dungtichSV;       // day thoi gian vao voi 1
-                    Write('1', 1, si_fResult);        // ghi ket qua phan cong cho voi 1
+                    Write(" 1", 2, si_fResult);        // ghi ket qua phan cong cho voi 1
                 } else
                 {
                     voi2 = voi2 + dungtichSV;       // day thoi gian vao voi 2
-                    Write('2',1,si_fResult);        // ghi ket qua phan cong cho voi 2
+                    Write(" 2",2,si_fResult);        // ghi ket qua phan cong cho voi 2
                 }
             }
-
+            Write("  ", 2, si_fResult);
             if(isDoneResult == 1)
             {
                 voi1 = voi2 =0;         // set lai thoi gian ban dau cho 2 voi
                 Close(si_fResult);
-                Signal("sinhvien");     // goi tien trinh "sinhvien" hoat dong
+                Signal("sinhvien");    // goi tien trinh "sinhvien" hoat dong
                 break;
             }
 
-            Signal("sinhvien");     // goi tien trinh "sinhvien" hoat dong
+            Signal("sinhvien");//0     // goi tien trinh "sinhvien" hoat dong
         }
     }
 }

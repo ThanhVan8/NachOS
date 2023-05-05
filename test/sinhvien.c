@@ -12,11 +12,11 @@ int main()
 	int fileLength;		                    // bien luu do dai file
 	int pFile;		                        // bien luu con tro trong file
 
-    Signal("sv_vn");	        // chay tien trinh "sv_vn"
+    Signal("sv_vn");//1	        // chay tien trinh "sv_vn"
     while(1)
     {
         fileLength = 0;
-        Wait("sinhvien");
+        Wait("sinhvien");//0
 
         // tao file result.txt de ghi ket qua phan chia voi nuoc
         is_Success = CreateFile("result.txt");
@@ -64,24 +64,24 @@ int main()
             
             Read(&c, 1, si_fSinhVien);          // doc ki tu tu file sinhvien.txt
             
+            
             if(c != ' ')                    
             {
                 Write(&c,1, si_fVoiNuoc);       // ghi vao file voinuoc.txt dung tich binh nuoc
             } else 
                 flagVoiNuoc = 1;
 
-            if(pFile == fileLength -1)
+            if(pFile == fileLength - 1)
             {
-                Write('*',1,si_fVoiNuoc);
+                Write("*",1,si_fVoiNuoc);
                 flagVoiNuoc = 1;
             }
 
             if(flagVoiNuoc == 1)
             {
                 Close(si_fVoiNuoc);             // dong file voinuoc.txt
-                Signal("voinuoc");              // goi tien trinh "voinuoc" hoat dong
-                Wait("sinhvien");               // cho tien trinh "sinhvien" cho de "voinuoc" hoat dong
-
+                Signal("voinuoc"); //1             // goi tien trinh "voinuoc" hoat dong
+                Wait("sinhvien");  //-1             // cho tien trinh "sinhvien" cho de "voinuoc" hoat dong
 
                 // tao mot file voinuoc.txt khac va thuc hien nhu tren
                 is_Success = CreateFile("voinuoc.txt");
@@ -91,7 +91,6 @@ int main()
 					Signal("main"); // tro ve tien trinh chinh
 					return;
 				}
-		
 
 				// Mo file voinuoc.txt de ghi tung dung tich nuoc cua sinhvien
 				si_fVoiNuoc = Open("voinuoc.txt", 0);
@@ -103,7 +102,6 @@ int main()
 				}
             }
             pFile++;    // dua con tro den vi tri tiep theo
-
         }
         Signal("main");
     }

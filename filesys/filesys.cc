@@ -97,14 +97,14 @@ FileSystem::FileSystem(bool format)
     
     //fTab = new OpenFile*[10];
 	index = 0;
-    this->Create("stdin", 0);
-	this->Create("stdout", 0);
 	for (int i = 0; i < MAX_FILE; ++i)
 	{
 		fTab[i] = NULL;
 	}
 	fTab[index++] = this->Open("stdin", 2);
 	fTab[index++] = this->Open("stdout", 3);
+    this->Create("stdin", 0);
+	this->Create("stdout", 0);
 }
 
 FileSystem::~FileSystem()
@@ -222,6 +222,8 @@ OpenFile* FileSystem::Open(char *name)
 OpenFile* FileSystem::Open(char *name, int type)
 {
 	int freeSlot = this->FindFreeSlot();
+    if(freeSlot == -1)
+        return NULL;
 	Directory *directory = new Directory(NumDirEntries);
 	OpenFile *openFile = NULL;
 	int sector;
@@ -232,7 +234,7 @@ OpenFile* FileSystem::Open(char *name, int type)
 	if (sector >= 0)
 		fTab[freeSlot] = new OpenFile(sector, type);	// name was found in directory 
 	delete directory;
-	index++;
+	// index++;
 	return fTab[freeSlot];				// return NULL if not found
 }
 

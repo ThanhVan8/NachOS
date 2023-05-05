@@ -50,6 +50,7 @@
 
 #define MaxBuffer 255
 #define MaxFileLength 32
+#define MaxFile 15
 
 char *User2System(int virtAddr, int limit)
 {
@@ -338,11 +339,11 @@ ExceptionHandler(ExceptionType which)
                     int type = machine->ReadRegister(5);
                     int FreeSlot = fileSystem->FindFreeSlot();
                     // neu da mo 10 files
-                    if (fileSystem->index > 10)
-                    {
-                        machine->WriteRegister(2, -1);
-                        break;
-                    }
+                    // if (fileSystem->index > 10)
+                    // {
+                    //     machine->WriteRegister(2, -1);
+                    //     break;
+                    // }
                         
                     // Khi mo stdin hay stdout, khong tang slg files
                     char *buf = User2System(bufAddr, MaxFileLength + 1);
@@ -360,7 +361,6 @@ ExceptionHandler(ExceptionType which)
                         delete buf;
                         break;
                     }
-
                     // Khong mo duoc file
                     if ((fileSystem->fTab[FreeSlot] = fileSystem->Open(buf, type)) != NULL)
                     {
@@ -380,14 +380,18 @@ ExceptionHandler(ExceptionType which)
                 {
                     int no = machine->ReadRegister(4);
                     int i = fileSystem->index;
-
-                    // mo file thu i va muon dong file thu no.[no] (no > i) --> loi
-                    if (i < no)
-                    {
-                        printf("\nClose file failed \n");
+                    if(no < 0 || no > MaxFile - 1) {
                         machine->WriteRegister(2, -1);
+                        printf("\nNot in file table");
                         break;
                     }
+                    // // mo file thu i va muon dong file thu no.[no] (no > i) --> loi
+                    // if (i < no)
+                    // {
+                    //     printf("\nClose file failed \n");
+                    //     machine->WriteRegister(2, -1);
+                    //     break;
+                    // }
                     if (fileSystem->fTab[no])
                     {
                         delete fileSystem->fTab[no];
@@ -410,8 +414,8 @@ ExceptionHandler(ExceptionType which)
                     int charcount = machine->ReadRegister(5);
                     int openf_id = machine->ReadRegister(6);
                     int i = fileSystem->index;
-                    
-                    if (openf_id > i || openf_id < 0 || openf_id == 1) // Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
+                    // openf_id > i ||
+                    if ( openf_id > MaxFile - 1 || openf_id < 0 || openf_id == 1) // Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
                     {						 	// or try to read stdout
                         printf("\nTry to open invalid file %d", openf_id);
                         machine->WriteRegister(2, -1);
@@ -456,9 +460,9 @@ ExceptionHandler(ExceptionType which)
                     int charcount = machine->ReadRegister(5);
                     int openf_id = machine->ReadRegister(6);
                     int i = fileSystem->index;
+                    // openf_id > i ||
 
-
-                    if (openf_id > i || openf_id < 0 || openf_id == 0) //  Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
+                    if (openf_id > MaxFile - 1 || openf_id < 0 || openf_id == 0) //  Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
                     {
                         machine->WriteRegister(2, -1);
                         break;
@@ -515,28 +519,25 @@ ExceptionHandler(ExceptionType which)
                     int pos = machine->ReadRegister(4); // Lay vi tri can chuyen con tro den trong file
                     int id = machine->ReadRegister(5); // Lay id cua file
                     // Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
-                    if (id < 0 || id > 14)
+                    if (id < 0 || id > MaxFile - 1)
                     {
                         printf("\nKhong the seek vi id nam ngoai bang mo ta file.");
                         machine->WriteRegister(2, -1);
-                        //IncreasePC();
-                        return;
+                        break;
                     }
                     // Kiem tra file co ton tai khong
                     if (fileSystem->fTab[id] == NULL)
                     {
                         printf("\nKhong the seek vi file nay khong ton tai.");
                         machine->WriteRegister(2, -1);
-                        //IncreasePC();
-                        return;
+                        break;
                     }
                     // Kiem tra co goi Seek tren console khong
                     if (id == 0 || id == 1)
                     {
                         printf("\nKhong the seek tren file console.");
                         machine->WriteRegister(2, -1);
-                        //IncreasePC();
-                        return;
+                        break;
                     }
                     // Neu pos = -1 thi gan pos = Length nguoc lai thi giu nguyen pos
                     pos = (pos == -1) ? fileSystem->fTab[id]->Length() : pos;
@@ -551,8 +552,7 @@ ExceptionHandler(ExceptionType which)
                         fileSystem->fTab[id]->Seek(pos);
                         machine->WriteRegister(2, pos);
                     }
-                    //IncreasePC();
-                    return;
+                    break;
                 }
                 case SC_Exec:
                 {

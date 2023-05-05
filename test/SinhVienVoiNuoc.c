@@ -122,10 +122,10 @@ int main()
 		Close(si_fSinhVien);
 			
 		// Goi tien trinh sinhvien hoat dong
-		Signal("sinhvien");
+		Signal("sinhvien");//1
 
 		// Tien trinh "main" phai cho
-		Wait("main");	
+		Wait("main");	//-1
 		
 		// Thuc hien doc file tu result va ghi ket qua vao file output.txt
 		// file result.txt de ghi thu tu voi nuoc tuong ung voi sinh vien den rot nuoc - duoc tao trong sinhvien.c
@@ -152,7 +152,7 @@ int main()
 				break;
 			}
 			Write(&c, 1, si_fOutput);		// ghi voi nuoc tuong ung vao file output.txt
-			Write(" ", 1, si_fOutput);		// cac voi nuoc cach nhau 1 khoang " "
+			//Write(" ", 1, si_fOutput);		// cac voi nuoc cach nhau 1 khoang " "
 			
 		}
 		
@@ -162,5 +162,3 @@ int main()
 	Close(si_fOutput);		// dong file output.txt
 	return 0;
 }
-
-	
