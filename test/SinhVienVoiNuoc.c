@@ -15,7 +15,7 @@ int main()
 
 	// Khoi tao Semaphore 
 	is_Success = CreateSemaphore("sinhvien", 0);		// Khoi tao semaphore "sinhvien"
-	if(is_Success == -1)        // khoi tao that bai
+	if(is_Success == -1)        						// khoi tao that bai
 		return 1;
 
 	is_Success = CreateSemaphore("voinuoc", 0);			// Khoi tao semaphore "voinuoc"
@@ -26,14 +26,14 @@ int main()
 	if(is_Success == -1)
 		return 1;
 
-	is_Success = CreateSemaphore("pre", 0);
+	is_Success = CreateSemaphore("sv_vn", 0);
 	if(is_Success == -1)
 		return 1;
 
     // Mo - doc file input.txt 
     si_fInput = Open("input.txt",1);
     if(si_fInput == -1)     // Mo file that bai
-        return -1;
+        return 1;
     
     // Tao file output 
     is_Success = CreateFile("output.txt");
@@ -45,7 +45,7 @@ int main()
     if(si_fOutput == -1)        // mo file that bai
     {
         Close(si_fInput);       // dong file input
-        return -1;
+        return 1;
     }        
 
 	// Doc so luong thoi diem dang xet
@@ -109,12 +109,12 @@ int main()
 				// Doc toi cuoi file
 				break;
 			}
-			if(c != '\n') 			// kiem soat ki tu xuong dong de thoat vong lap
+			if(c != '\n') 						// kiem soat ki tu xuong dong de thoat vong lap
 			{
 				Write(&c, 1, si_fSinhVien);		// ghi vao file sinhvien.txt			
 			}
 			else
-				break;				// khi doc het 1 doc
+				break;							// khi doc het 1 doc
 						
 		}
 
@@ -122,13 +122,13 @@ int main()
 		Close(si_fSinhVien);
 			
 		// Goi tien trinh sinhvien hoat dong
-		Signal("sinhvien");
+		Signal("sinhvien");//1
 
 		// Tien trinh "main" phai cho
-		Wait("main");	
+		Wait("main");	//-1
 		
 		// Thuc hien doc file tu result va ghi ket qua vao file output.txt
-		// file result.txt de ghi thu tu voi nuoc tuong ung voi sinh vien den rot nuoc
+		// file result.txt de ghi thu tu voi nuoc tuong ung voi sinh vien den rot nuoc - duoc tao trong sinhvien.c
 		si_fResult = Open("result.txt", 1);		
 		if(si_fResult == -1)		// mo file that bai
 		{
@@ -148,18 +148,17 @@ int main()
 			{
 				Write("\r\n", 2, si_fOutput);	
 				Close(si_fResult);			// dong file result.txt
-				Signal("pre");				
+				Signal("sv_vn");				
 				break;
 			}
 			Write(&c, 1, si_fOutput);		// ghi voi nuoc tuong ung vao file output.txt
-			Write(" ", 1, si_fOutput);		// cac voi nuoc cach nhau 1 khoang " "
+			//Write(" ", 1, si_fOutput);		// cac voi nuoc cach nhau 1 khoang " "
 			
 		}
 		
+	}
 	
 	Close(si_fInput);		// dong file input.txt
 	Close(si_fOutput);		// dong file output.txt
 	return 0;
 }
-
-	

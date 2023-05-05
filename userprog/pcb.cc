@@ -70,46 +70,50 @@ int PCB::Exec(char* filename, int id)
 	return id;
 }
 
-int PCB::GetID(){ return this->thread->processID; }
-int PCB::GetNumWait() { return this->numwait; }
-int PCB::GetExitCode() { return this->exitcode; }
+// Trả về ProcessID của tiến trình gọi thực hiện
+int PCB::GetID() {
+	return this->thread->processID;
+}
 
-void PCB::SetExitCode(int ec){ this->exitcode = ec; }
+// Trả về số lượng tiến trình chờ
+int PCB::GetNumWait() {
+	return this->numwait;
+}
 
-// Process tranlation to block
-// Wait for JoinRelease to continue exec
+// Tiến trình cha đợi tiến trình con kết thúc
 void PCB::JoinWait()
 {
-	//Gọi joinsem->P() để tiến trình chuyển sang trạng thái block và ngừng lại, chờ JoinRelease để thực hiện tiếp.
+	// Gọi joinsem->P() để tiến trình chuyển sang trạng thái block và ngừng lại, 
+	// chờ JoinRelease để thực hiện tiếp.
     joinsem->P();
 }
 
-// JoinRelease process calling JoinWait
+// Cho phép tiến trình con kết thúc
+void PCB::ExitRelease() 
+{
+	// Gọi exitsem-->V() để giải phóng tiến trình đang chờ. 
+    exitsem->V();
+}
+
+// Báo cho tiến trình cha thực thi tiếp
 void PCB::JoinRelease()
 { 
 	// Gọi joinsem->V() để giải phóng tiến trình gọi JoinWait().
     joinsem->V();
 }
 
-// Let process tranlation to block state
-// Waiting for ExitRelease to continue exec
+// Tiến trình con kết thúc
 void PCB::ExitWait()
 { 
-	// Gọi exitsem-->V() để tiến trình chuyển sang trạng thái block và ngừng lại, chờ ExitReleaseđể thực hiện tiếp.
+	// Gọi exitsem-->V() để tiến trình chuyển sang trạng thái block và ngừng lại, 
+	// chờ ExitRelease để thực hiện tiếp.
     exitsem->P();
-}
-
-// Release wating process
-void PCB::ExitRelease() 
-{
-	// Gọi exitsem-->V() để giải phóng tiến trình đang chờ.
-    exitsem->V();
 }
 
 void PCB::IncNumWait()
 {
 	multex->P();
-	++numwait;
+	numwait++;
 	multex->V();
 }
 
@@ -117,10 +121,22 @@ void PCB::DecNumWait()
 {
 	multex->P();
 	if(numwait > 0)
-		--numwait;
+		numwait--;
 	multex->V();
 }
 
-void PCB::SetFileName(char* fn){ strcpy(filename,fn);}
-char* PCB::GetFileName() { return this->filename; }
+int PCB::GetExitCode() {
+	return this->exitcode;
+}
 
+void PCB::SetExitCode(int ec) {
+	this->exitcode = ec;
+}
+
+void PCB::SetFileName(char* fn) {
+	strcpy(filename, fn);
+}
+
+char* PCB::GetFileName() {
+	return this->filename;
+}

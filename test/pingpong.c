@@ -9,4 +9,6 @@ void main()
 	pongPID = Exec("./test/pong");
 	Join(pingPID);
 	Join(pongPID);
+	Exit(0);
+	Exit(0);
 }
