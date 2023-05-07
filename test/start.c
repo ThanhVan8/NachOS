@@ -179,14 +179,6 @@ Yield:
 	j	$31
 	.end Yield
 
-	.globl Seek
-	.ent	Seek
-Seek :
-	addiu $2, $0, SC_Seek
-	syscall
-	j	$31
-	.end Seek
-
 	.globl CreateSemaphore
 	.ent	CreateSemaphore
 CreateSemaphore :

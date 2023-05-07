@@ -19,31 +19,25 @@
  * is being asked for
  */
 #define SC_Halt		    0
-//SC thao tac
 #define SC_Exit		    1
 #define SC_Exec		    2
 #define SC_Join		    3
-//SC lien quan toi file
 #define SC_CreateFile   4
 #define SC_Open		    5
 #define SC_Read		    6
 #define SC_Write	    7
 #define SC_Close	    8
-// SC cho da luong
 #define SC_Fork		    9
 #define SC_Yield	    10
-// SC co ban
 #define SC_ReadInt      11
 #define SC_PrintInt     12
 #define SC_ReadChar     13
 #define SC_PrintChar    14
 #define SC_ReadString   15
 #define SC_PrintString  16
-#define SC_Seek         17
-//SC cho semaphore
-#define SC_CreateSemaphore  18
-#define SC_Wait             19
-#define SC_Signal           20
+#define SC_CreateSemaphore  17
+#define SC_Wait             18
+#define SC_Signal           29
 
 
 #ifndef IN_ASM
@@ -73,7 +67,6 @@ typedef int SpaceId;
 /* Run the executable, stored in the Nachos file "name", and return the 
  * address space identifier
  */
- //chay file thuc thi
 SpaceId Exec(char *name);
  
 /* Only return once the the user program "id" has finished.  
@@ -112,7 +105,7 @@ int CreateFile(char *name);
 OpenFileId Open(char *name, int type);
 
 /* Write "size" bytes from "buffer" to the open file. */
-void Write(char *buffer, int size, OpenFileId id);
+int Write(char *buffer, int charcount, OpenFileId id);
 
 /* Read "size" bytes from the open file into "buffer".  
  * Return the number of bytes actually read -- if the open file isn't
@@ -120,12 +113,10 @@ void Write(char *buffer, int size, OpenFileId id);
  * characters to read, return whatever is available (for I/O devices, 
  * you should always wait until you can return at least one character).
  */
-int Read(char *buffer, int size, OpenFileId id);
+int Read(char *buffer, int charcount, OpenFileId id);
 
 /* Close the file, we're done reading and writing to it. */
 void Close(OpenFileId id);
-
-int Seek(int pos, OpenFileId id);
 
 /* User-level thread operations: Fork and Yield.  To allow multiple
  * threads to run within a user program. 

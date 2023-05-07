@@ -2,7 +2,6 @@
 #include "system.h"
 #include "openfile.h"
 
-//#define For(i,x,y) for (int i = (x); i < y; ++i)
 //constructor
 PTable::PTable(int size)
 {
@@ -15,14 +14,9 @@ PTable::PTable(int size)
     bm = new BitMap(size);
     bmsem = new Semaphore("bmsem", 1);
 
-    // For(i,0,MAX_PROCESS){
-	// 	pcb[i] = 0;
-    // }
-
 	bm->Mark(0);
 
 	pcb[0] = new PCB(0);
-	//pcb[0]->parentID = -1;
 	pcb[0]->SetFileName("./test/scheduler");
 }
 
@@ -63,7 +57,6 @@ int PTable::ExecUpdate(char *name)
 	}
 
 	// So sánh tên chương trình và tên của currentThread để chắc chắn rằng chương trình này không gọi thực thi chính nó.
-	// if(strcmp(name,"./test/scheduler") == 0 || strcmp(name,currentThread->getName()) == 0 )
 	if (strcmp(name, currentThread->getName()) == 0)
 	{
 		DEBUG('a', "\nCannot execute itself.");

@@ -11,27 +11,12 @@
 					// See definitions listed under #else
 class OpenFile {
   public:
-  	//Khai bao bien type
-  	int type;
+  	int type;	// 0: file doc va ghi
+				// 1: file chi doc
 		
-	//Ham dung cua class OpenFile
-	OpenFile(int f) { file = f; currentOffset = 0; type = 0; fileName = new char [MaxFileLength + 1];}		// mo file mac dinh
-	OpenFile(int f, int t) { file = f; currentOffset = 0; type = t; fileName = new char [MaxFileLength + 1];}	// mo file voi tham so type
-    	~OpenFile() { delete fileName; Close(file); }			// close the file
-
-  	int Seek(int pos) {
-		Lseek(file, pos, 0);
-		currentOffset = Tell(file);
-		return currentOffset;
-	}
-	
-  	
-    void SetFileName(char* name)
-    {   
-	strcpy(fileName, name);
-    }  
-
-    char* GetFileName() {return fileName;}	
+	OpenFile(int f) { file = f; currentOffset = 0; type = 0;}
+	OpenFile(int f, int t) { file = f; currentOffset = 0; type = t;}	// mo file voi type
+    	~OpenFile() { Close(file); }			// close the file
 
     int ReadAt(char *into, int numBytes, int position) { 
     		Lseek(file, position, 0); 
@@ -53,25 +38,11 @@ class OpenFile {
 		return numWritten;
 		}
 
-	//Default Length method
-	/*
     int Length() { Lseek(file, 0, 2); return Tell(file); }
-	*/
-
-	int Length() {
-		int len;
-		Lseek(file, 0, 2);
-		len = Tell(file);
-		Lseek(file, currentOffset, 0);
-		return len;
-	}
-    
-    int GetCurrentPos() { currentOffset = Tell(file); return currentOffset; }
 	
   private:
     int file;
     int currentOffset;
-    char *fileName;
 };
 
 #else // FILESYS
@@ -80,11 +51,9 @@ class FileHeader;
 class OpenFile {
   public:
   	//Khai bao bien type
-  	int type; 
-	// type 0 : read and write
-	// type 1 : only read
-	// type 2 : stdin
-	// type 3 : stdout
+  	int type; 		// 0: file doc va ghi
+					// 1: file chi doc
+
 	
     OpenFile(int sector);		// Open a file whose header is located
 					// at "sector" on the disk
@@ -110,22 +79,10 @@ class OpenFile {
 					// file (this interface is simpler 
 					// than the UNIX idiom -- lseek to 
 					// end of file, tell, lseek back 
-    
-    int GetCurrentPos()
-    {
-	return seekPosition;
-    }
-    
-    void SetFileName(char* name)
-    {
-   	strcpy(fileName, name);
-    }  
 
-    char* GetFileName() {return fileName;}
   private:
     FileHeader *hdr;			// Header for this file 
     int seekPosition;			// Current position within the file
-    char* fileName;
 };
 
 #endif // FILESYS

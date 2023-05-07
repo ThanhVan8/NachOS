@@ -22,13 +22,12 @@ OpenFile::OpenFile(int sector)
 }
 
 //Cai dat ham dung OpenFile voi them tham so type
-OpenFile::OpenFile(int sector, int _type)
+OpenFile::OpenFile(int sector, int type)
 {
-	fileName = new char[MaxFileLength + 1];
 	hdr = new FileHeader;
 	hdr->FetchFrom(sector);
 	seekPosition = 0;
-	type = _type;
+	this->type = type;
 }
 
 //----------------------------------------------------------------------
