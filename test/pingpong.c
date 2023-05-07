@@ -1,14 +1,15 @@
 #include "syscall.h"
+#include "copyright.h"
 
-
-void main()
+int main()
 {
 	int pingPID, pongPID;
-	PrintString("Ping-Pong test starting...\n\n");
+
 	pingPID = Exec("./test/ping");
 	pongPID = Exec("./test/pong");
+
 	Join(pingPID);
 	Join(pongPID);
-	Exit(0);
+	
 	Exit(0);
 }

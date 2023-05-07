@@ -38,7 +38,7 @@
 #include "copyright.h"
 #include "openfile.h"
 
-#define MAX_FILE 15
+#define MAX_FILE 10
 
 typedef int OpenFileID;
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
@@ -49,19 +49,15 @@ class FileSystem
 {
 public:
 	OpenFile *fTab[MAX_FILE]; // file table
-	int index;
 
 	FileSystem(bool format)
 	{
-		index = 0;
 		this->Create("stdin", 0);
 		this->Create("stdout", 0);
 		for (int i = 0; i < MAX_FILE; ++i)
-		{
 			fTab[i] = NULL;
-		}
-		fTab[index++] = this->Open("stdin", 2);
-		fTab[index++] = this->Open("stdout", 3);
+		fTab[0] = this->Open("stdin");
+		fTab[1] = this->Open("stdout");
 	}
 
 	~FileSystem()
@@ -89,7 +85,6 @@ public:
 
 		if (fileDescriptor == -1)
 			return NULL;
-		// index++;
 		return new OpenFile(fileDescriptor);
 	}
 
@@ -99,7 +94,6 @@ public:
 
 		if (fileDescriptor == -1)
 			return NULL;
-		// index++;
 		return new OpenFile(fileDescriptor, type);
 	}
 
@@ -124,7 +118,6 @@ public:
 class FileSystem {
   public:
   	OpenFile *fTab[MAX_FILE]; // file table
-	int index;
 	
     FileSystem(bool format);		// Initialize the file system.
 					// Must be called *after* "synchDisk" 

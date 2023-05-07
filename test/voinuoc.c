@@ -1,88 +1,83 @@
+// ----------------TIEN TRINH VOINUOC----------------
+
 #include "syscall.h"
 #include "copyright.h"
 
 int main()
 {
     // Khai bao
-    int is_Success;                         // bien kiem tra thanh cong
-    SpaceId si_fVoiNuoc, si_fResult;        // bien id cho file
-    char c;                                 // luu ki tu doc tu file
-    int voi1, voi2;                         // voi 1, voi 2
-    int dungtichSV;                         // dung tich binh nuoc cua sinh vien
-    int isDoneResult;                       // danh dau khi doc xong file result
+    int isSuccess;                         // bien kiem tra thanh cong
+    OpenFileId fVoiNuoc, fOutput;          // bien id cho file
+    char c;                                // luu ki tu doc tu file
+    int voi1, voi2;                        // voi 1, voi 2
+    int dungtichSV;                        // dung tich binh nuoc cua sinh vien
 
-    voi1 = voi2 = 0;
-    // Xu ly voi nuoc
-    while(1)
+    // file output.txt dung de ghi ket qua rot nuoc
+	isSuccess = CreateFile("output.txt");
+	if (isSuccess == -1) // tao file that bai
     {
-        Wait("sv_vn");  //0                  // cho tien trinh "sv_vn" vao trang thai cho
-        // mo file result.txt de ghi voi nuoc nao dang su dung
-        si_fResult = Open("result.txt",0); 
-        if(si_fResult == -1)            // mo file that bai
-        {
-            Signal("sinhvien");         // goi tien trinh "sinhvien" hoat dong
-            return;
-        }
-        
-        while(1)
-        {
-            Wait("voinuoc"); //0           // cho tien trinh "voinuoc" vao trang thai cho
-            c = 0;
-            // mo file voinuoc.txt de doc dung tich 
-            si_fVoiNuoc = Open("voinuoc.txt",1);
-            if(si_fVoiNuoc == -1)
-            {
-                Close(si_fResult);      // dong file result.txt
-                Signal("sinhvien");     // goi tien trinh "sinhvien" hoat dong
-                return;
-            }
+        Signal("sinhvien"); // goi tien trinh "sinhvien" hoat dong
+		return 0;
+    }
+    fOutput = Open("output.txt", 0);
+    if (fOutput == -1) // mo file that bai
+    {
+        Signal("sinhvien"); // goi tien trinh "sinhvien" hoat dong
+        return 0;
+    }
 
-            dungtichSV = 0;
-            isDoneResult = 0;
-            while(1)
+    voi1 = voi2 = 0; // dat thoi gian ban dau la 0
+
+    while (1)   // xu ly phan chia voi nuoc cho tung sinh vien
+    {
+        Wait("voinuoc"); // cho tien trinh "sinhvien" ghi 1 dung tich
+
+        // file voinuoc.txt de doc dung tich
+        fVoiNuoc = Open("voinuoc.txt", 1);
+        if (fVoiNuoc == -1)
+        {
+            Close(fOutput); // dong file voinuoc.txt
+            Signal("sinhvien"); // goi tien trinh "sinhvien" hoat dong
+            return 0;
+        }
+
+        dungtichSV = 0;
+
+        while (1)
+        {
+            Read(&c, 1, fVoiNuoc);
+            if (c == ' ' || c == '/')    // neu doc het 1 dung tich
             {
-                if(Read(&c, 1, si_fVoiNuoc) == -2)       // ??? doc ki tu tu file voinuoc    
-                {
-                    Close(si_fVoiNuoc);
-                    break;
-                }
-                if(c != '*')                            // 
-                {
-                    if(c >= '0' && c <= '9') {
-                        Write(&c, 1, si_fResult);
-                        dungtichSV = dungtichSV * 10 + (c - 48);
-                    }
-                } 
-                else
-                {
-                    isDoneResult = 1;
-                    Close(si_fVoiNuoc);
-                    break;
-                }
-            }
-            
-            if(dungtichSV !=0)
-            {
-                if(voi1 <= voi2)        // truong hop thoi gian cua voi 1 it hon (bang) voi 2
-                {
-                    voi1 = voi1 + dungtichSV;       // day thoi gian vao voi 1
-                    Write(" 1", 2, si_fResult);        // ghi ket qua phan cong cho voi 1
-                } else
-                {
-                    voi2 = voi2 + dungtichSV;       // day thoi gian vao voi 2
-                    Write(" 2",2,si_fResult);        // ghi ket qua phan cong cho voi 2
-                }
-            }
-            Write("  ", 2, si_fResult);
-            if(isDoneResult == 1)
-            {
-                voi1 = voi2 =0;         // set lai thoi gian ban dau cho 2 voi
-                Close(si_fResult);
-                Signal("sinhvien");    // goi tien trinh "sinhvien" hoat dong
+                Close(fVoiNuoc);    // dong file voinuoc.txt
                 break;
             }
-
-            Signal("sinhvien");//0     // goi tien trinh "sinhvien" hoat dong
+            else if (c >= '0' && c <= '9')
+            {
+                Write(&c, 1, fOutput);     // ghi dung tich binh dang xet vao file output.txt
+                dungtichSV = dungtichSV * 10 + (c - '0');
+            }
         }
+
+        if (dungtichSV != 0)
+        {
+            if (voi1 <= voi2) // truong hop thoi gian cua voi 1 it hon (bang) voi 2
+            {
+                voi1 += dungtichSV;         // day thoi gian vao voi 1
+                Write(" 1  ", 4, fOutput);    // ghi ket qua phan cong cho voi 1
+            }
+            else
+            {
+                voi2 += dungtichSV;         // day thoi gian vao voi 2
+                Write(" 2  ", 4, fOutput);    // ghi ket qua phan cong cho voi 2
+            }
+        }
+
+        if (c == '/') // neu la binh nuoc cuoi cua 1 thoi diem
+        {
+            voi1 = voi2 = 0; // set lai thoi gian ban dau cho 2 voi
+            Write("\r\n", 2, fOutput);
+        }
+
+        Signal("sinhvien"); // goi tien trinh "sinhvien" de ghi dung tich tiep theo
     }
 }

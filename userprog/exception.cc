@@ -50,7 +50,7 @@
 
 #define MaxBuffer 255
 #define MaxFileLength 32
-#define MaxFile 15
+#define MaxFile 10
 
 char *User2System(int virtAddr, int limit)
 {
@@ -305,7 +305,7 @@ ExceptionHandler(ExceptionType which)
 
                     if (strlen(filename) == 0)
                     {
-                        printf("\nFile name is not valid");
+                        printf("\nFile name is not valid!");
                         machine->WriteRegister(2, -1); 
                         delete filename;
                         break;
@@ -313,7 +313,7 @@ ExceptionHandler(ExceptionType which)
 
                     if (filename == NULL)  //khong doc duoc file
                     {
-                        printf("\n Not enough memory in system");
+                        printf("\nNot enough memory in system");
                         machine->WriteRegister(2, -1); 
                         delete filename;
                         break;
@@ -337,14 +337,7 @@ ExceptionHandler(ExceptionType which)
                 {
                     int bufAddr = machine->ReadRegister(4); 
                     int type = machine->ReadRegister(5);
-                    int FreeSlot = fileSystem->FindFreeSlot();
-                    // neu da mo 10 files
-                    // if (fileSystem->index > 10)
-                    // {
-                    //     machine->WriteRegister(2, -1);
-                    //     break;
-                    // }
-                        
+                    
                     // Khi mo stdin hay stdout, khong tang slg files
                     char *buf = User2System(bufAddr, MaxFileLength + 1);
                     if (strcmp(buf, "stdin") == 0)
@@ -356,15 +349,17 @@ ExceptionHandler(ExceptionType which)
                     }
                     if (strcmp(buf, "stdout") == 0)
                     {
-                        printf("Stdout mode\n");
+                        printf("\nStdout mode");
                         machine->WriteRegister(2, 1); // trả về id file là 1
                         delete buf;
                         break;
                     }
-                    // Khong mo duoc file
-                    if ((fileSystem->fTab[FreeSlot] = fileSystem->Open(buf, type)) != NULL)
+
+                    int FreeSlot = fileSystem->FindFreeSlot();
+                    fileSystem->fTab[FreeSlot] = fileSystem->Open(buf, type);
+                    if (fileSystem->fTab[FreeSlot] != NULL)
                     {
-                        printf("\nOpen file '%s' success\n", buf);
+                        printf("\nOpen file '%s' success", buf);
                         machine->WriteRegister(2, FreeSlot); // trả về id file
                     }
                     else 
@@ -379,31 +374,24 @@ ExceptionHandler(ExceptionType which)
                 case SC_Close:
                 {
                     int no = machine->ReadRegister(4);
-                    int i = fileSystem->index;
-                    if(no < 0 || no > MaxFile - 1) {
+
+                    if(no < 0 || no > MaxFile - 1) { // neu id file nam ngoai bang mo ta file
                         machine->WriteRegister(2, -1);
-                        printf("\nNot in file table");
+                        printf("\nNot in file table!");
                         break;
                     }
-                    // // mo file thu i va muon dong file thu no.[no] (no > i) --> loi
-                    // if (i < no)
-                    // {
-                    //     printf("\nClose file failed \n");
-                    //     machine->WriteRegister(2, -1);
-                    //     break;
-                    // }
-                    if (fileSystem->fTab[no])
+                    if (fileSystem->fTab[no])   // neu file ton tai
                     {
-                        delete fileSystem->fTab[no];
+                        delete fileSystem->fTab[no]; // xoa file khoi bang mo ta file
                         fileSystem->fTab[no] = NULL;
                         machine->WriteRegister(2, 0);
-                        printf("\nClose file success\n");
+                        printf("\nClose file success");
                         break;
                     }
                     else
                     {
                         machine->WriteRegister(2, -1);
-                        printf("\nClose file failed\n");
+                        printf("\nClose file failed");
                         break;
                     }
                 }
@@ -413,43 +401,42 @@ ExceptionHandler(ExceptionType which)
                     int virtAddr = machine->ReadRegister(4);
                     int charcount = machine->ReadRegister(5);
                     int openf_id = machine->ReadRegister(6);
-                    int i = fileSystem->index;
-                    // openf_id > i ||
-                    if ( openf_id > MaxFile - 1 || openf_id < 0 || openf_id == 1) // Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
-                    {						 	// or try to read stdout
-                        printf("\nTry to open invalid file %d", openf_id);
+
+                    if ( openf_id > MaxFile - 1 || openf_id < 0 || openf_id == 1) // neu id cua file nam ngoai bang mo ta file
+                    {                                                             // hoac doc tu stdout
+                        printf("\nTry to open invalid file id '%d'", openf_id);
                         machine->WriteRegister(2, -1);
                         break;
                     }
 
-                    if (fileSystem->fTab[openf_id] == NULL)
+                    if (fileSystem->fTab[openf_id] == NULL) // neu file khong ton tai
                     {
+                        printf("\nFile id '%d' not exist!", openf_id);
                         machine->WriteRegister(2, -1);
                         break;
                     }
 
                     char *buf = User2System(virtAddr, charcount);
-                    
-                    if (openf_id == 0) // read from stdin
+                    if (openf_id == 0) // neu doc tu console
                     {
                         int sz = gSynchConsole->Read(buf, charcount);
                         System2User(virtAddr, sz, buf);
-                        machine->WriteRegister(2, sz);
+                        machine->WriteRegister(2, sz);  // tra ve so ki tu doc duoc
 
                         delete buf;
                         break;
                     }
-                    
-                    int before = fileSystem->fTab[openf_id]->GetCurrentPos();
-                    if ((fileSystem->fTab[openf_id]->Read(buf, charcount)) > 0)
+
+                    int len = fileSystem->fTab[openf_id]->Read(buf, charcount);
+                    if (len > 0)
                     {
                         // chuyen du lieu tu kernel sang user
-                        int after = fileSystem->fTab[openf_id]->GetCurrentPos();
-                        System2User(virtAddr, charcount, buf);
-                        machine->WriteRegister(2, after - before + 1);	// after & before just used for returning
-                    } else {
-                        machine->WriteRegister(2, -2); // cham toi cuoi file
+                        System2User(virtAddr, len, buf);
+                        machine->WriteRegister(2, len); // tra ve so ki tu doc duoc
                     }
+                    else    // neu cham toi cuoi file
+                        machine->WriteRegister(2, -2);
+
                     delete buf;
                     break;
                 }
@@ -459,17 +446,17 @@ ExceptionHandler(ExceptionType which)
                     int virtAddr = machine->ReadRegister(4);
                     int charcount = machine->ReadRegister(5);
                     int openf_id = machine->ReadRegister(6);
-                    int i = fileSystem->index;
-                    // openf_id > i ||
 
-                    if (openf_id > MaxFile - 1 || openf_id < 0 || openf_id == 0) //  Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
-                    {
+                    if (openf_id > MaxFile - 1 || openf_id < 0 || openf_id == 0)    // neu id cua file nam ngoai bang mo ta file
+                    {                                                               // hoac ghi vao stdin
+                        printf("\nCannot write to invalid file id '%d'", openf_id);                                                
                         machine->WriteRegister(2, -1);
                         break;
                     }
                     
-                    if (fileSystem->fTab[openf_id] == NULL)
+                    if (fileSystem->fTab[openf_id] == NULL) // neu file khong ton tai
                     {
+                        printf("\nFile id '%d' not exist!", openf_id);
                         machine->WriteRegister(2, -1);
                         break;
                     }
@@ -477,7 +464,7 @@ ExceptionHandler(ExceptionType which)
                     // file chi doc	
                     if (fileSystem->fTab[openf_id]->type == 1)
                     {
-                        printf("Try to modify read-only file");
+                        printf("\nTry to modify read-only file id '%d'", openf_id);
                         machine->WriteRegister(2, -1);
                         break;
                     }
@@ -487,102 +474,44 @@ ExceptionHandler(ExceptionType which)
                     if (openf_id == 1)
                     {
                         int i = 0;
-                        while (buf[i] != '\0' && buf[i] != '\n')
+                        do
                         {
                             gSynchConsole->Write(buf + i, 1);
                             i++;
-                        }
-                        buf[i] = '\n';
-                        gSynchConsole->Write(buf + i, 1); // ki tu cuoi
+                        }  while (buf[i] != '\0');
 
-                        machine->WriteRegister(2, i - 1);
+                        machine->WriteRegister(2, i); // tra ve so ki tu ghi duoc
                         delete buf;
                         break;
                     }
-
 
                     // ghi vao file
-                    int before = fileSystem->fTab[openf_id]->GetCurrentPos();
-                    if ((fileSystem->fTab[openf_id]->Write(buf, charcount)) != 0)
+                    int len = fileSystem->fTab[openf_id]->Write(buf, charcount);
+                    if (len > 0)
                     {
-                        int after = fileSystem->fTab[openf_id]->GetCurrentPos();
-                        System2User(virtAddr, after - before, buf);
-                        machine->WriteRegister(2, after - before + 1);
+                        machine->WriteRegister(2, len); // tra ve so ki tu ghi duoc
                         delete buf;
                         break;
                     }
-                }
-
-                case SC_Seek:
-                {
-                    // Di chuyen con tro den vi tri thich hop trong file voi tham so la vi tri can chuyen va id cua file
-                    int pos = machine->ReadRegister(4); // Lay vi tri can chuyen con tro den trong file
-                    int id = machine->ReadRegister(5); // Lay id cua file
-                    // Kiem tra id cua file truyen vao co nam ngoai bang mo ta file khong
-                    if (id < 0 || id > MaxFile - 1)
-                    {
-                        printf("\nKhong the seek vi id nam ngoai bang mo ta file.");
-                        machine->WriteRegister(2, -1);
-                        break;
-                    }
-                    // Kiem tra file co ton tai khong
-                    if (fileSystem->fTab[id] == NULL)
-                    {
-                        printf("\nKhong the seek vi file nay khong ton tai.");
-                        machine->WriteRegister(2, -1);
-                        break;
-                    }
-                    // Kiem tra co goi Seek tren console khong
-                    if (id == 0 || id == 1)
-                    {
-                        printf("\nKhong the seek tren file console.");
-                        machine->WriteRegister(2, -1);
-                        break;
-                    }
-                    // Neu pos = -1 thi gan pos = Length nguoc lai thi giu nguyen pos
-                    pos = (pos == -1) ? fileSystem->fTab[id]->Length() : pos;
-                    if (pos > fileSystem->fTab[id]->Length() || pos < 0) // Kiem tra lai vi tri pos co hop le khong
-                    {
-                        printf("\nKhong the seek file den vi tri nay.");
-                        machine->WriteRegister(2, -1);
-                    }
-                    else
-                    {
-                        // Neu hop le thi tra ve vi tri di chuyen thuc su trong file
-                        fileSystem->fTab[id]->Seek(pos);
-                        machine->WriteRegister(2, pos);
-                    }
+                    delete buf;
                     break;
                 }
+
                 case SC_Exec:
                 {
-                    //ham chay file thuc thi, tra ve -1 neu loi
-                    int virtAddr;
-                    virtAddr = machine->ReadRegister(4);	// doc dia chi ten chuong trinh tu thanh ghi r4
-                    char* name;
-                    name = User2System(virtAddr, MaxFileLength + 1); // Lay ten chuong trinh, nap vao kernel space
+                    int virtAddr = machine->ReadRegister(4);	// doc dia chi ten chuong trinh tu thanh ghi r4
+                    char *name = User2System(virtAddr, MaxFileLength + 1); // Lay ten chuong trinh, nap vao kernel space
 
                     if (name == NULL)
                     {
-                        DEBUG('a', "\n Not enough memory in System");
-                        printf("\n Not enough memory in System");
+                        DEBUG('a', "\nCan't open file '%s'", name);
+                        printf("\nCan't open file '%s'", name);
                         machine->WriteRegister(2, -1);// tra ve -1
                         break;
                     }
-                    OpenFile *file = fileSystem->Open(name);
-                    if (file == NULL)
-                    {
-                        printf("\nExec:: Can't open this file.");
-                        machine->WriteRegister(2, -1); // tra ve -1
-                        delete name;
-                        break;
-                    }
 
-                    delete file;
-
-                    // Return child process id
                     int pid = pTab->ExecUpdate(name);
-                    machine->WriteRegister(2, pid);
+                    machine->WriteRegister(2, pid); // tra ve id cua tien trinh
 
                     delete name;
                     break;
@@ -647,8 +576,8 @@ ExceptionHandler(ExceptionType which)
                     // kiểm tra bộ nhớ 
                     if(name == NULL)
                     {
-                        DEBUG('a', "\nNot enough memory in System");
-                        printf("\nNot enough memory in System");
+                        DEBUG('a', "\nNot enough memory in system");
+                        printf("\nNot enough memory in system");
                         machine->WriteRegister(2,-1);
                         delete name;
                         break;
@@ -659,14 +588,14 @@ ExceptionHandler(ExceptionType which)
                     // không tìm thấy semaphore "name" trong sTab
                     if(check == -1)
                     {
-                        DEBUG('a', "\nThis semaphore is not exist");
-                        printf("\nThis semaphore is not exist");
-                        machine->WriteRegister(2,-1);
+                        DEBUG('a', "\nThis semaphore not exist");
+                        printf("\nThis semaphore not exist");
+                        machine->WriteRegister(2, -1);
                         delete name;
                         break;
                     }
 
-                    machine->WriteRegister(2,check);
+                    machine->WriteRegister(2, 0);
                     delete name;
                     break;           
                 }
@@ -679,9 +608,9 @@ ExceptionHandler(ExceptionType which)
                     // kiểm tra bộ nhớ 
                     if(name == NULL)
                     {
-                        DEBUG('a', "\nNot enough memory in System");
-                        printf("\nNot enough memory in System");
-                        machine->WriteRegister(2,-1);
+                        DEBUG('a', "\nNot enough memory in system");
+                        printf("\nNot enough memory in system");
+                        machine->WriteRegister(2, -1);
                         delete name;
                         break;
                     }
@@ -691,14 +620,14 @@ ExceptionHandler(ExceptionType which)
                     // không tìm thấy semaphore "name" trong sTab
                     if(check == -1)
                     {
-                        DEBUG('a', "\nThis semaphore is not exist");
-                        printf("\nThis semaphore is not exist");
-                        machine->WriteRegister(2,-1);
+                        DEBUG('a', "\nThis semaphore not exist");
+                        printf("\nThis semaphore not exist");
+                        machine->WriteRegister(2, -1);
                         delete name;
                         break;
                     }
 
-                    machine->WriteRegister(2,check);
+                    machine->WriteRegister(2, 0);
                     delete name;
                     break;           
                 }
